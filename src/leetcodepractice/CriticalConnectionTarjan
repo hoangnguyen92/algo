@@ -1,0 +1,65 @@
+package leetcodepractice;
+
+import java.util.*;
+
+public class CriticalConnectionTarjan{
+    List<List<Integer>> result = new ArrayList<>();
+
+    public static void main(String[] args) {
+        CriticalConnectionTarjan tarjan = new CriticalConnectionTarjan();
+        System.out.println(tarjan.criticalConnections(7, Arrays.asList(
+                Arrays.asList(6,4),
+                Arrays.asList(4,1),
+                Arrays.asList(1,0),
+                Arrays.asList(2,0),
+                Arrays.asList(3,2),
+                Arrays.asList(5,3),
+                Arrays.asList(5,6))));
+    }
+
+    public List<List<Integer>> criticalConnections(int n, List<List<Integer>> connections) {
+        // construct a graph based on the nodes in the edges (connections)
+        Map<Integer, List<Integer>> g = new HashMap<>();
+        for (List<Integer> edge: connections) {
+            int node1 = edge.get(0);
+            int node2 = edge.get(1);
+
+            g.putIfAbsent(node1, new ArrayList<>());
+            g.get(node1).add(node2);
+
+            g.putIfAbsent(node2, new ArrayList<>());
+            g.get(node2).add(node1);
+        }
+
+        // populate timestamps array using tarjan's algorithm
+        int[] timestamps = new int[n];
+        helper(g, 0, 0, 1, timestamps);
+
+        return result;
+    }
+
+    private int helper(Map<Integer, List<Integer>> g, int curr, int parent, int ts, int[] timestamps) {
+        timestamps[curr] = ts;
+        for (int nextNode: g.get(curr)) {
+            // The next node ignores parent node
+            if (nextNode == parent) continue;
+
+            // If next nodes have already been traversed, set the timestamp of
+            // current node to minimum of all next nodes
+            if (timestamps[nextNode] > 0)
+                timestamps[curr] = Math.min(timestamps[curr], timestamps[nextNode]);
+            else
+                // else, set the timestamp of current node to minimium of all it's children.
+                timestamps[curr] = Math.min(timestamps[curr], helper(g, nextNode, curr, ts + 1, timestamps));
+
+            // As defined by Tarjan's algorithm, if the timestamp of the current node is already
+            // smaller than that of it's next node (child), then the edge connecting the
+            // current and next nodes make up a critical connection.
+            if (ts < timestamps[nextNode])
+                result.add(Arrays.asList(curr, nextNode));
+        }
+
+        return timestamps[curr];
+    }
+
+}
